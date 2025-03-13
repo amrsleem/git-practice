@@ -1,219 +1,405 @@
-Git Your Practice On!
-19 Git Tips for Everyday use http://www.alexkras.com/19-git-tips-for-everyday-use
-Git Hot Tips by Wes Bos https://wesbos.com/git-hot-tips/
-Git Reference https://help.github.com/categories/github-pages-basics/
-Pro Git Online Book http://git-scm.com/book
-Git Ready http://gitready.com
-Quick Command Practice http://try.github.com
-Git Real http://www.codeschool.com/courses/git-real
-How to GitHub: Fork, Branch, Track, Squash and Pull Request http://gun.io/blog/how-to-github-fork-branch-and-pull-request
-Learn Git Online http://learn.github.com/p/intro.html
-Teach Github https://github.com/github/teach.github.com
-Git: The Simple Guide http://rogerdudler.github.com/git-guide
-Git Immersion http://gitimmersion.com
-Git Branching http://pcottle.github.io/learnGitBranching/
-Git Cheat Sheet https://www.atlassian.com/git/tutorials/atlassian-git-cheatsheet
-Welcome to my practice git repository where you can eff up as much as you'd like plus work with a real, living, breathing person on the other side. Here we learn all things git. Feel free to send me Pull Requests just to discover what it's like when a Repo Master asks you
+# Welcome to git practice!
+This repo is a safe place to practice the basics of git. Try out a rebase without risking any important code! Learn how to sync from an upstream repo! Practice resolving merge conflicts!
+This guide assumes you have a comfortable knowledge of unix shell commands. If you want a refresher, [try here](https://github.com/you-dont-need/You-Dont-Need-GUI). This guide also assumes you have an existing github account and have [added your ssh key to it](https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/).
 
-"Can you squash your commits for us"
-and you're all like...
+This guide is designed as a space to practice git commands, not just teach them. If you are just after a quick reference, I recommend http://rogerdudler.github.io/git-guide/
 
-"How the hell do I do that?"
-This is where we make those mistakes ... so don't be scared :)
+## What are git and GitHub?
+Git is a version-control system. It tracks changes to files and allows people to collaborate on projects. Git is often used for software projects, but can be used for any project, and is especially powerful for projects based on text files. A project in git is called a "repository" (or repo for short). A repo is a bunch of files and directories. Each repo includes a .git directory which contains information on every change made to the repo.
 
-Instructions
-Fork this repo and send me a Pull Request with anything from Grandma Peggy's Crumbled Oatmeal Cookie Recipe to your favorite Sublime Text 2 preferences. It's all good yo! Learning is the prize in this game.
+GitHub is an online hosting service for git. While the bulk of your work with git takes place on your own computer, it is often useful to sync your local repo with a "remote" repo (on GitHub), allowing you to work on multiple computers or collaborate with others on a project.
 
-Typical & Highly Useful Git Commands
-git clone git@github.com:<user_name>/the-repo-you-are-cloning.git
-Clones your remote origin repo locally
+There are plenty of alternatives to GitHub, such as Stash, GitLab, or self-hosting your remote repos.
 
+## Init
+To create a new repo, make a directory and use `git init` inside it.
+```bash
+mkdir myDummyRepo
+cd myDummyRepo
+git init
+```
+That's it, real simple. You should see a `.git` directory in there now.
+```bash
+ls -a # directories starting with . are normally hidden, so use -a to show all
+```
+We won't be using this new repo, so you can go ahead and delete it.
+```bash
+rm -rf myDummyRepo
+```
+
+## Fork
+Fork this repo into your github account by pressing the Fork button on github (top right of the github page for this repo). This will create a fork (copy) of this repo in your github account, creating a new remote repository that you are in control of. Forking is useful when you want to use an existing repo as the basis for your own project. A forked repository can also be used to propose changes to the original repository.
+
+If you are not using github to manage your remote repo, then create your own remote copy of this repo in whatever remote hosting service you are using.
+
+## Clone
+`clone` creates a local copy of a remote repo. Let's clone your forked repo from the previous step. We will use ssh when cloning so that we can interact with the remote without having to worry about credentials.
+```bash
+git clone git@github.com:username/git-practice.git # use your username in here
+```
+If you're cloning a repo that you don't own, you will have to clone using https instead of ssh. You will also be unable to push up changes to a repo that you don't own.
+
+## Add and Commit
+Now that we have a local clone of the repo, let's make a change to it.
+```bash
+echo "It is a period of civil war" > crawl.txt
+git status
+```
+The `git status` command shows that we have an unstaged change. To record a change in git, we first have to stage that change to the index, and then commit all staged changes.
+```bash
+git add crawl.txt # stage the change
+git status # shows that our change is staged and ready to commit
+git commit -m "Started telling a story of long ago & far, far away" # commit staged changes with a message
+```
+The staging step seems unnecessary in this case, but it is useful on complex projects where you are changing multiple files. Let's try an example
+```bash
+echo "Rebel spaceships, striking from a hidden base, have won their first victory against the evil Galactic Empire." >> crawl.txt # modify our first file
+echo "I love potatoes" > newFile.txt # create a new file
+git status
+```
+We now have two changes, and we want to commit them separately, which we can do using the staging command. Try running `git status` after each command below to see the changes you are making.
+```bash
+git add crawl.txt
+git commit -m "Started the crawl"
+git add newFile.txt
+git commit -m "started my food blog"
+```
+Separate commits are useful when committing changes that are logically or functionally unrelated.
+
+## `HEAD` and the git tree
+In git, the `HEAD` is the pointer to the current branch reference. Moving the head is how we move to newer/older commits or move between branches. You can think of the head as a "you are here" marker. Let's take a look at where we are
+```bash
+git log
+```
+You can see `HEAD` at the top, but this isn't a particularly clear visualisation of the git tree. If you have a graphical git program you can use it to examine the git tree, but I prefer to stay on the command line.
+```bash
+git log --graph --decorate --pretty=oneline --abbrev-commit --all # display a much prettier log
+```
+That's much better! We can see `HEAD` clearly at the top, pointing to the `master` branch. Other branches are visible too, but ignore those for now.
+
+Let's save that command for us to use later. This step is optional, but recommended. Credit to [Conrad parker](http://blog.kfish.org/2010/04/git-lola.html) for the lola command.
+```bash
+git config --global alias.lola 'log --graph --decorate --pretty=oneline --abbrev-commit --all'
+git lola
+```
+
+## Branches
+As you saw from `git lola`, our git tree has multiple branches. Let's list them all:
+```bash
+git branch -l # show all local branches (should only be master)
+git branch -r # show all remote branches
+git branch -a # show all branches
+```
+Each branch is a pointer to a snapshot of your project. If you are working on multiple different featurs, always use a new branch for each.
+
+### New branch
+Let's make a new branch
+```bash
+git branch myFirstBranch # create a new branch
+git lola
+```
+What has happened? Not a lot. We've created a new branch (snapshot of our code) but that's it. `HEAD` still points to the `master` branch, so any code changes we make will be performed on `master`, not our new branch. To move `HEAD` to a different branch, use the `checkout` command.
+```bash
+git checkout myFirstBranch
+git lola
+```
+Now, we can see `HEAD` is pointing to our new branch. Often, you will want to go to a branch immediately after creating it. You can do so in a single command:
+```bash
+git checkout -b "foodBlog" #create a new branch and switch to it immediately
+git status
+```
+
+If we commit changes to our new branch, we will see it become different to our master branch:
+```bash
+echo "You have failed me for the last time" >> crawl.txt
+git add crawl.txt
+git commit -m "Added Vader quote"
+git lola
+git diff master # compare with master branch
+```
+
+## reset
+### Resetting to a commit
+Now, let's try altering the tree with `reset`. This command moves the branch that `HEAD` points to (and moves `HEAD` along with it). The command is called "reset" because it "resets" or "undoes" changes.
+
+The `reset` command has several modes, so let's start with `--soft`. First, let's create an unwanted commit.
+```bash
+git checkout master
+echo "please clean this up asdfasdfasd" >> mess.txt
+git add mess.txt
+git commit -m "added mess"
+git lola
+```
+Now we will reset to the parent of the current commit using the shortcut `HEAD~`. You can also move to a specific commit by specifying the commit hash (visible in `git log` or `git lola`) instead of `HEAD~`.
+```bash
+git reset --soft HEAD~
+git lola
+```
+You can see that the master branch has moved back to previous commit, and `HEAD` has moved along with it. None of the files have changed, though, and if we run `git status` we see that mess.txt is staged ready to be committed. `git reset --soft HEAD~` has essentially undone our latest commit.
+
+Next up is the default behaviour for reset: `--mixed`. This will undo commits (like `--soft`) and will also unstage files, but it will not change the files themselves. Run `git lola` and `git status` after each command below to see the changes you are making.
+```bash
+git commit -m "make a mess again"
+git reset HEAD~
+```
+After running the default (`--mixed`) `reset`, you can see that `mess.txt` is present, but unstaged. We have undone the commit and unstaged the file.
+
+Finally, the most dangerous option: `reset --hard`. This command will undo commits, unstage changes, AND remove those changes from any files. Your changes will be obliterated forever\* so use with caution!
+\*see Reflog
+```bash
+git add . # stage everything we just unstaged
+git commit -m "make a mess AGAIN"
+git reset --hard HEAD~
+```
+If you look at your working directory, you can see that `mess.txt` is nowhere to be found, and `git status` is clean.
+
+In summary:
+`reset --soft`: Move branch that `HEAD` points to (undo commits)
+`reset`: (`--mixed`) Move `HEAD` branch and make the staging index look like the new HEAD location (undo commits and unstage changes)
+`reset --hard`: Move `HEAD` branch, make staging index look like HEAD, and make the working directory look like the index (undo commits, unstage changes, and remove all changes. Use with caution).
+
+In the code above, we've been using `reset` to move to commits on the same branch, but there's nothing stopping you from resetting to commits on different branches.
+
+#### Squashing commits
+Reset is handy as an undo button, but let's try a more interesting example. Imagine we are a busy developer and we've made a whole pile of commit messages on our local machine.
+```bash
+git checkout -b butternut
+touch pumpkin.txt
+git add pumpkin.txt
+git commit -m "vegi"
+echo "dear diary" >> pumpkin.txt
+git add pumpkin.txt
+git commit -m "yep"
+echo "today I ate a radish" >> pumpkin.txt
+git add pumpkin.txt
+git commit -m "oops"
+echo "I mean, I ate a pumpkin. What a day" >> pumpkin.txt
+git add pumpkin.txt
+git commit -m "max"
+git lola
+```
+Those commit messages were handy to track our own progress, but the rest of the dev team would rather see one or two commits which each describe a complete change. Lets replace our incremental commits with a single commit message:
+```bash
+git reset HEAD~4
+git add pumpkin.txt
+git commit -m "Started a log of my food habits"
+```
+Now return to the master branch for the rest of our work
+```bash
+git checkout master
+```
+
+### Resetting a file
+`reset` can also be used on a specific file. If you do this, `HEAD` won't move, but all other `reset` actions will be carried out. Let's try it. Run `git status` as you go to see the changes.
+```bash
+git checkout master
+echo "The empire did nothing wrong" > protest.txt # make a change
+git add protest.txt # stage the file
+git reset protest.txt # unstage the file
+git status
+rm protest.txt # clean up our example
+```
+There is no `--hard` option when resetting a file. Use the `checkout` command instead.
+
+## checkout
+### checking out a commit
+Like `reset`, the `checkout` command manipulates the git tree and moves `HEAD` to a specific commit. `git checkout [commit]` is similar to `git reset --hard [commit]`, but `checkout` only moves `HEAD`, not the branch that `HEAD` points to. I like to think of `checkout` as a way to move about the tree, while `reset` is a way to change the tree. Let's try it out.
+
+```bash
+git checkout HEAD~
+git lola
+```
+After the checkout, we are now in a "detached head" state - no longer working on a branch. Unlike before when we did `git reset`, we can still see all our previous commits in the git tree, and we can return to our previous branch easily
+```bash
+git checkout master
+git lola
+```
+
+`checkout` will also try to merge any uncommitted changes, and stop us if they would be overwritten when checking out the new location.
+```bash
+echo "stop" > crawl.txt
+git status
+git checkout HEAD~5
+```
+git won't let us checkout because we have uncommitted changes
+
+### checking out a file
+You can also use `checkout` on a file path. This will not move `HEAD`, but it will unstage any changes to that file in the index and also overwrite that file. `git checkout [branch] file` does what you'd expect from `git reset --hard [branch] file`, except that the latter command does not exist.
+
+Let's use checkout to remove our unwanted changes to crawl
+```bash
+git checkout master crawl.txt
+```
+
+Reset and checkout are both powerful tools, and with great power comes great complexity. I highly recommend [reading further](https://git-scm.com/book/en/v2/Git-Tools-Reset-Demystified) on these two commands.
+
+## Reflog
+When I said that `reset --hard` would remove a commit forever, I wasn't quite telling the truth. `git reflog` is available as a last resort option. This command shows a reflog (history) of each time the tip of a branch was updated. If you have a good memory and good commit messages, you can use reflog to recover commits that are no longer in the git tree.
+
+```bash
+git reflog # show reflog for HEAD
+git reflog show --all # show reflog for all branches
+
+git checkout blizzard
+git reset --hard HEAD~ # oops, I just lost a commit that I wanted
+git reflog show blizzard # show reflog for blizzard branch
+git reset <commit-hash> # put the commit hash in here, no <>
+git status # check that the changes are as expected
+git reset --hard <commit-hash> # put the commit hash in here
+```
+
+## Stash and pop
+Sometimes you want to temporarily store some work but not commit it (eg if you want to quickly check out another branch, or if you realised you had started working on the wrong branch. `git stash` will let you do this. `git stash pop` will recover the most recently stashed changes (stashed changes are stored using a stack).
+```bash
+git checkout master
+echo "temporary mcTempFace" >> temp.txt
+git add temp.txt
+git stash # temporarily store our work because this is the wong branch
+git checkout blizzard # move to correct branch
+git stash pop # recover stored work
+git add .
+git commit -m "added something temporary"
+```
+Never use stash for long term storage, because I guarantee you will forget what you had stored and what branch it was meant to go on. If you want to store something for more than a day and you don't want it on any of your branches, just put it on a new branch in the relevane place.
+
+## Merging
+When you want to incorporate code from one branch into another branch, it's time for a `merge`.
+
+### Auto-resolved merge
+Most merges are straightforward affairs, and git handles them completely automatically
+```bash
+git checkout merge-target
+git merge simple-feature # merges simple-feature onto the current branch (merge-target)
+git lola
+```
+
+### Merge conflicts
+#### Manual resolution
+Sometimes, a merge will require manual intervention
+```bash
+git checkout merge-target
+git merge complex-feature
+git status
+```
+Bup bow. The merge hit some conflicts, and git isn't sure how to resolve them. `git status` tells us that these conflicts are in `crawl.txt`, so open that file in your favourite editor. You will see conflict markers in your text like so:
+
+```
+<<<<<<< HEAD
+It is a planet of civil war.
+=======
+It is a period of PARTIES and maybe war.
+>>>>>>> complex-feature
+```
+
+The text between `<<<<<<< HEAD` and `=======` is from the `merge-target` branch (your current branch), while the text between `=======` and `>>>>>>> complex-feature` is from the complex-feature branch. To resolve the conflict, edit the text as you see fit and then delete the conflict markers. When you are finished, save your work and return to the terminal.
+```bash
+git add crawl.txt
+git merge --continue
+```
+You can also use a merge tool (such as kdiff, meld, or beyond compare) to resolve merges. While I prefer using the command line for the bulk of my git work, a GUI merge tool is invaluable when faced with complex merges.
+
+#### Ours vs theirs
+Sometimes when you have merge conflicts you just want to take all the changes from a specific branch for each conflict.
+```bash
+git checkout merge-target
+git merge complex-feature-2
+```
+
+When merging, "ours" means the branch you are merging into, while "theirs" means the feature branch you are merging from. In our case, we are merging into `merge-target` and we are merging from `complex-feature-2`. We have decided that we only want the changes from `complex-feature-2`, aka "theirs", so we can avoid doing a full manual merge (hooray).
+```bash
+git checkout --theirs funky.txt # take all changes from feature branch
+git add funky.txt
+git merge --continue
+```
+
+## Remotes
+A remote is a remote copy of a repository. In most projects, there is a single remote repository which is used as a central source of truth.
+
+### Pull
+`pull` syncs your local branch with a remote branch. It works by performing a `fetch` (downloads latest data from the remote) and then `merge`s the fetched data into the current branch. In your case there will be nothing to update, as no changes have been made on the remote.
+```bash
+git checkout master
+git pull origin master
+```
+
+### Push
+`push` updates the remote branch with the contents of your local branch.
+```bash
+git checkout master
+echo "Porgs" >> crawl.txt
+git add crawl.txt
+git commit -m "added a cute animal thing"
+git push origin master
+```
+Once you push something, it can be `pull`ed by other people working on the code. For that reason, it is a very bad idea to use branch-altering commands (such as `reset`) on commits that have been pushed.
+
+### Checkout branch from remote
+When you cloned this repository, it was created with a single remote, called `origin`. Let's try checking out a branch from that remote.
+
+```bash
+git fetch # update remote info
+git checkout -b origin/check-me-out # create a new local branch to track remote branch
+```
+
+### Adding remotes
+Since you have forked this repository, you want to keep it up to date with the original repository you forked it from. To do so, add the original repo as a new remote called "upstream":
+```bash
+git remote add upstream https://github.com/danrs/git-practice.git # add new remote
+```
+
+### Sync upstream (fetch and merge)
+Now that you've added a new upstream, you can sync upstream branches with local branches
+```bash
+git checkout master
 git fetch upstream
-Pulls in the remote changes not present in your local repo. Downloads objects and references from another repository.
-
 git merge upstream/master
-Merges any changes fetched into your working files
+```
+Again, this specific example won't do anything unless I've just updated the original repo
 
-git add <file>
-Start tracking new files and also stage changes to already tracked files
+## Rebasing
+Rebasing moves one or more commits to a new base commit. Warning: [don't rebase public branches](https://benmarshall.me/git-rebase/)
 
-git status & git diff
+### Auto-resolved rebase
+As with merging, most rebases are trivial.
+```bash
+git checkout rebel-alliance
+git lola
+git rebase hoth
+git lola
+```
+Examining the git tree, you can see that the start of the `rebel-alliance` branch has moved to the end of the hoth branch
 
-Tells us what files and assets have been modified and staged
-git status -s
-This will display what files have been removed, changed or modified.
+### Merge conflicts while rebasing
+Some rebases will cause merge conflicts
+```bash
+git checkout yoda
+git lola
+git rebase hoth
+git lola
+```
+As you did in the merging section, open your favourite editor and resolve any merge conflicts. Use `git status` to see conflicting files. When you are done, add the files and continue rebaseing.
+```bash
+git add .
+git rebase --continue
+```
 
-(M) - modified
-(A) - added
-(AM) - file has not been altered since it was last added
-git commit -m 'the message goes here for the commit'
-Records a snapshot of the project into your history at the time of your commit.
+#### ours vs theirs
+```bash
+git checkout palp
+git rebase hoth
+```
+During a rebase, git checks out the branch you are rebasing onto and replays your branch changes on top of it. Thus, "ours" means the branch you are rebasing onto and "theirs" beans the branch that is being rebased. In this case, we are rebasing palp ("theirs") onto hoth ("ours"). As with merging, we can make use of these terms to avoid a complex merge. Let's say we want to keep changes in the hoth branch whenever there's a conflict
 
-git add '*.<file_extension>'
-This command adds all file types with the same extension, especially from different directories. Without quotes the command will only execute within the same directory it's been called from.
+```bash
+git checkout --theirs plans.txt
+git add plans.txt
+git rebase --continue
+```
 
-git rm --cached <file>
-Unstages a file from the working tree (i.e. stops tracking the file).
-
-git log
-Remembers all the changes we've committed so far, in the order we committed them.
-
-git log --summary
-See where new files were added for the first time or where files were deleted.
-
-git remote add origin git@github.com:<user_name>/<repo_name>.git
-Creates a brand new remote repository.
-
-git remote -v
-Show a list of the current remote repositories
-
-git reset <file>
-Removes the desired file from staging area.
-
-git branch -r
-List all the remote branches currently tracked
-
-git remote prune origin
-Deletes branch locally if it has been removed remotely. Helps to remove stale references.
-
-git checkout -- <target>
-Changes the desired target back to the state of the last commit. A target can be a file or a directory (for example).
-
-git rebase
-Rebase allows you to easily change a series of commits, reordering, editing, or squashing commits together into a single commit.
-
-Be warned: it's considered bad practice to rebase commits which you have already pushed to a remote repo. Doing so may invoke the wrath of the git gods. https://help.github.com/articles/interactive-rebase
-
-Adding
-git add <list of files>
-(i.e. git add readme.md license.txt. Can be multiples)
-
-git add --all
-Add all the new files since last
-
-git add *.txt
-Add all txt files in directory
-
-Staging
-git diff
-Show unstaged differences since last commit
-
-git diff --staged
-Gets the staged differences and displays what has changed since our last commit
-
-Reverting
-git reset HEAD <file>
-Head is the last commit on the current branch we are on. What if you stage something you didn't need to be staged? This is the key.
-
-git checkout -- <file>
-Reset all changes to a file since last commit
-
-git reset --soft HEAD^
-What if you regret a commit? This will undo your last commit. (^ means move commit before HEAD and puts changes into staging).
-
-git reset --hard HEAD^
-Traverse through commits and revert back one by one.
-
-git reset --hard HEAD
-Undo Last commit and all changes
-
-git commit --amend -m "added another file to the commit'
-New commit message will override previous commit message
-
-Remotes
-"Remotes are kinda like bookmarks"
-
-git remote -v
-Show the current remote repos
-
-git remote add <name> <address>
-Add a new remote repo
-
-git remote rm <name>
-Remove remote repo
-
-Cloning, Branching, Fetching & Merging
-git fetch
-Pulls down any changes but doesn't merge them
-
-git branch <branch name>
-Makes a new branch
-
-git checkout <branch name>
-Switching branch and on a different timeline
-
-git merge <branch>
-Merges branch into master
-
-git branch -d <branch name>
-Deletes branch
-
-git checkout -b <branch name>
-Creates a new branch and then switches to it
-
-:wq + enter
-VI Editor Quick Key Exit
-
-g fetch origin
-
-git checkout -t <remote>/<branch>
-Fetches a remote branch not available locally also reference issue #7
-
-Pushing & Pulling
-git push -u origin master (remote repo name[origin], local branch name[master])
-Lets you just run git push later on without specifying name and branch
-
-git pull
-Pull changes in and syncs up your repo. Doesn't update local code
-
-Branching
-git branch -r
-List all remote branches
-
-git remote show origin
-Show all the remote branches
-
-git push origin :<branch name>
-Deletes the remote branch
-
-git branch -D <branch name>
-Delete the local repo branch and if you don't want the commits any longer on it then delete them too.
-
-git remote prune origin
-Deletes the branch locally if it has been removed remotely. Helps to remove stale references.
-
-Rebasing
-"Merge commits are bad"
-
-git rebase
-Move all changes to master local which are not in origin/master remote to a temporary area
-
-History
-git log
-Viewing the commits history
-
-git config --global color.ui true
-Color codes the commit SHA
-
-git log --pretty=oneline
-or
-
-git log --graph --oneline --all
-Commit and history is one line
-
-git log --pretty=format:"%h
-Exactly how you want the output using placeholders (use git help log)
-
-git log --until <value>
-Date Ranges. For example you could grab everything from the year 2013 using git log --until 2013
-
-Removal
-git rm <filename>
-Removes file completely
-
-git rm --cached <file names>
-Won't be deleted from your file system, but keeps the local changes still.
-
-Help
-git help
-git help <command>
+## Cherry-picking
+Cherry picking allows you to pick a commit from one branch and apply it to another. Lets say we want to apply commit with the message "PICK ME" from the `cherries` branch onto the `farm` branch.
+```bash
+git checkout farm
+git cherry-pick <commit-hash> # insert the correct hash here
+git lola
+```
